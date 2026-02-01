@@ -19,9 +19,13 @@ Examples:
 """
 
 import argparse
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# Suppress noisy warnings before importing mlx_audio
+os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 
 from mlx_audio.tts.generate import generate_audio
 
@@ -33,46 +37,34 @@ DEFAULT_MODELS = {
 }
 
 
-def configure_transformers() -> None:
-    """Reduce noisy warnings and enable Mistral regex fix when available."""
-    try:
-        from transformers.utils import logging as hf_logging
-
-        hf_logging.set_verbosity_error()
-    except Exception:
-        pass
-
-    try:
-        from transformers import AutoTokenizer
-    except Exception:
-        return
-
-    original = AutoTokenizer.from_pretrained
-    if getattr(original, "_qwen3_fix_mistral_regex", False):
-        return
-
-    def patched(*args, **kwargs):
-        kwargs.setdefault("fix_mistral_regex", True)
-        return original(*args, **kwargs)
-
-    patched._qwen3_fix_mistral_regex = True
-    AutoTokenizer.from_pretrained = patched
-
-
 def get_output_components(output: str | None, out_dir: str, prefix: str):
-    """Resolve output directory, prefix, and format."""
-    out_dir_path = Path(out_dir).expanduser()
-    out_dir_path.mkdir(parents=True, exist_ok=True)
+    """Resolve output directory, prefix, and format.
 
+    If output is specified:
+      - Absolute path: use its directory
+      - Relative path with directory: use that directory
+      - Filename only: use out_dir
+    """
     if output:
-        output_path = Path(output)
+        output_path = Path(output).expanduser()
         if output_path.is_absolute():
             out_dir_path = output_path.parent
-        name = output_path.name
-        stem = Path(name).stem
-        ext = Path(name).suffix.lstrip(".") or "wav"
+            out_dir_path.mkdir(parents=True, exist_ok=True)
+        elif output_path.parent != Path("."):
+            # Has directory component like "foo/bar.wav"
+            out_dir_path = output_path.parent
+            out_dir_path.mkdir(parents=True, exist_ok=True)
+        else:
+            # Just filename like "output.wav" - use current directory
+            out_dir_path = Path(".")
+
+        stem = output_path.stem
+        ext = output_path.suffix.lstrip(".") or "wav"
         return str(out_dir_path), stem, ext, True
 
+    # No output specified, use out_dir with timestamp
+    out_dir_path = Path(out_dir).expanduser()
+    out_dir_path.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return str(out_dir_path), f"{prefix}_{timestamp}", "wav", False
 
@@ -192,8 +184,8 @@ Examples:
     cv_parser.add_argument("--instruct", help="Style instruction (e.g., calm, warm)")
     cv_parser.add_argument("--model", help="Model name (default: 0.6B-CustomVoice-4bit)")
     cv_parser.add_argument("--speed", type=float, help="Speech speed")
-    cv_parser.add_argument("--output", help="Output file name")
-    cv_parser.add_argument("--out-dir", default="./outputs", help="Output directory (default: ./outputs)")
+    cv_parser.add_argument("--output", help="Output file name (e.g., output.wav)")
+    cv_parser.add_argument("--out-dir", default="./outputs", help="Output directory when --output not specified")
 
     vd_parser = subparsers.add_parser("voice-design", help="Design a new voice")
     vd_parser.add_argument("--text", required=True, help="Text to synthesize")
@@ -207,7 +199,7 @@ Examples:
     vd_parser.add_argument("--model", help="Model name (default: 1.7B-VoiceDesign-5bit)")
     vd_parser.add_argument("--speed", type=float, help="Speech speed")
     vd_parser.add_argument("--output", help="Output file name")
-    vd_parser.add_argument("--out-dir", default="./outputs", help="Output directory (default: ./outputs)")
+    vd_parser.add_argument("--out-dir", default="./outputs", help="Output directory when --output not specified")
 
     vc_parser = subparsers.add_parser("voice-clone", help="Clone from reference audio")
     vc_parser.add_argument("--text", required=True, help="Text to synthesize")
@@ -216,15 +208,13 @@ Examples:
     vc_parser.add_argument("--model", help="Model name (default: 0.6B-Base-4bit)")
     vc_parser.add_argument("--speed", type=float, help="Speech speed")
     vc_parser.add_argument("--output", help="Output file name")
-    vc_parser.add_argument("--out-dir", default="./outputs", help="Output directory (default: ./outputs)")
+    vc_parser.add_argument("--out-dir", default="./outputs", help="Output directory when --output not specified")
 
     args = parser.parse_args()
 
     if not args.mode:
         parser.print_help()
         sys.exit(1)
-
-    configure_transformers()
 
     if args.mode == "custom-voice":
         run_custom_voice(args)

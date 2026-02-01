@@ -3,7 +3,7 @@ name: qwen3-tts-mlx
 description: Local Qwen3-TTS speech synthesis on Apple Silicon via MLX. Use for offline narration, audiobooks, video voiceovers, and multilingual TTS.
 metadata:
   author: agiseek
-  version: "1.0.2"
+  version: "1.1.0"
 ---
 
 # Qwen3-TTS MLX
@@ -149,55 +149,97 @@ Tip: Use 5-10 seconds of clean audio for best results.
 
 | Parameter | Required | Description |
 |----------|----------|-------------|
-| `--model` | Yes | Model name (see tables above) |
 | `--text` | Yes | Text to synthesize |
-| `--voice` | No | Built-in voice name (CustomVoice only) |
-| `--lang_code` | No | Language: Chinese/English/Japanese/Korean |
+| `--model` | No | Model name (has sensible defaults per mode) |
+| `--voice` | No | Built-in voice name (CustomVoice only, default: Vivian) |
+| `--lang_code` | No | Language: Chinese/English/Japanese/Korean (default: Chinese) |
 | `--instruct` | No | Style control (CustomVoice) or voice design (VoiceDesign) |
-| `--output_path` | No | Output file path |
-| `--ref_audio` | No | Reference audio (VoiceClone) |
-| `--ref_text` | No | Transcript for reference audio |
-| `--speed` | No | Speech speed |
-| `--play` | No | Play after generation |
+| `--output` | No | Output file path (e.g., output.wav or /path/to/file.wav) |
+| `--out-dir` | No | Output directory when --output not specified (default: ./outputs) |
+| `--ref_audio` | VoiceClone | Reference audio file path |
+| `--ref_text` | VoiceClone | Transcript for reference audio |
+| `--speed` | No | Speech speed multiplier |
 
 ## Python API
 
 ```python
-from mlx_audio.tts import Qwen3TTS
+from mlx_audio.tts.utils import load
 import soundfile as sf
+import numpy as np
 
-# CustomVoice
-model = Qwen3TTS("mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit")
-audio = model.generate_custom_voice(
+# Load model
+model = load("mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit")
+
+# Generate audio (returns a generator)
+audio_chunks = []
+for chunk in model.generate_custom_voice(
     text="Hello from Qwen3-TTS.",
     speaker="Ryan",
-    lang="English",
+    language="English",
     instruct="clear, steady delivery"
-)
+):
+    if hasattr(chunk, 'audio') and chunk.audio is not None:
+        audio_chunks.append(chunk.audio)
+
+# Combine and save
+audio = np.concatenate(audio_chunks)
 sf.write("output.wav", audio, 24000)
+```
+
+### Using generate_audio (recommended for simplicity)
+
+```python
+from mlx_audio.tts.generate import generate_audio
+
+# This handles everything including file output
+generate_audio(
+    text="Hello from Qwen3-TTS.",
+    model="mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit",
+    voice="Ryan",
+    lang_code="English",
+    instruct="clear, steady delivery",
+    output_path=".",
+    file_prefix="output",
+    audio_format="wav",
+    join_audio=True,
+    verbose=True,
+)
 ```
 
 ### VoiceDesign
 
 ```python
-model = Qwen3TTS("mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit")
-audio = model.generate_voice_design(
+from mlx_audio.tts.generate import generate_audio
+
+generate_audio(
     text="Test line.",
-    voice_design="warm, friendly female narrator"
+    model="mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit",
+    instruct="warm, friendly female narrator",
+    lang_code="English",
+    output_path=".",
+    file_prefix="voice_design_output",
+    audio_format="wav",
+    join_audio=True,
+    verbose=True,
 )
-sf.write("output.wav", audio, 24000)
 ```
 
 ### VoiceClone
 
 ```python
-model = Qwen3TTS("mlx-community/Qwen3-TTS-12Hz-0.6B-Base-4bit")
-audio = model.generate(
+from mlx_audio.tts.generate import generate_audio
+
+generate_audio(
     text="New content.",
+    model="mlx-community/Qwen3-TTS-12Hz-0.6B-Base-4bit",
     ref_audio="reference.wav",
-    ref_text="Reference transcript"
+    ref_text="Reference transcript",
+    output_path=".",
+    file_prefix="cloned_output",
+    audio_format="wav",
+    join_audio=True,
+    verbose=True,
 )
-sf.write("output.wav", audio, 24000)
 ```
 
 ## Batch Dubbing
@@ -216,5 +258,6 @@ See `references/dubbing_format.md` for the JSON format.
 
 - If generation is slow, use the 4-bit CustomVoice model.
 - If voices sound off, keep sentences shorter and add punctuation.
-- If you see tokenizer regex warnings when calling mlx_audio directly, use the wrapper scripts in this skill (they enable `fix_mistral_regex`).
+- If you see tokenizer regex warnings, they are harmless and can be ignored.
 - If you need a different identity, switch to VoiceDesign or VoiceClone.
+- First run will download model files (~1-2GB), subsequent runs use cached models.

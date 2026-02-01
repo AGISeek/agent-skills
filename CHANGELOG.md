@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [1.1.0] - 2026-02-01
+
+### Changed
+- Remove broken `configure_transformers()` monkey patch that conflicted with transformers 5.x.
+- Use environment variable `TRANSFORMERS_VERBOSITY=error` to suppress warnings instead.
+- Fix `--output` flag to output to current directory when only filename is specified.
+- Update Python API examples in SKILL.md to use correct `mlx_audio.tts.utils.load` and `generate_audio`.
+- Correct CLI parameter documentation (`--model` is optional, not required).
+
+### Removed
+- Delete obsolete `qwen3_tts_custom.py` placeholder script.
+
 ## [1.0.1] - 2026-02-01
 
 ### Changed
