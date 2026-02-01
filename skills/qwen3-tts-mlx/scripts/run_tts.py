@@ -9,7 +9,7 @@ Dependencies:
 
 Examples:
     # CustomVoice
-    python run_tts.py custom-voice --text "Hello" --voice Vivian --lang_code Chinese
+    python run_tts.py custom-voice --text "Hello" --voice Vivian --lang_code English
 
     # VoiceDesign
     python run_tts.py voice-design --text "Hello" --instruct "warm, youthful female voice"
@@ -36,6 +36,34 @@ DEFAULT_MODELS = {
     "voice-clone": "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-4bit",
 }
 
+# Supported voices (case-insensitive in the model)
+VOICES = [
+    "Vivian",      # Chinese female, bright/young
+    "Serena",      # Chinese female, gentle/soft
+    "Uncle_Fu",    # Chinese male, news/narration
+    "Dylan",       # Chinese male (Beijing dialect)
+    "Eric",        # Chinese male (Sichuan dialect)
+    "Ryan",        # English male, energetic
+    "Aiden",       # English male, clear/neutral
+    "Ono_Anna",    # Japanese female
+    "Sohee",       # Korean female
+]
+
+# Supported languages
+LANGUAGES = [
+    "auto",       # Auto-detect (default)
+    "Chinese",
+    "English",
+    "Japanese",
+    "Korean",
+    "French",
+    "German",
+    "Italian",
+    "Spanish",
+    "Portuguese",
+    "Russian",
+]
+
 
 def get_output_components(output: str | None, out_dir: str, prefix: str):
     """Resolve output directory, prefix, and format.
@@ -43,7 +71,7 @@ def get_output_components(output: str | None, out_dir: str, prefix: str):
     If output is specified:
       - Absolute path: use its directory
       - Relative path with directory: use that directory
-      - Filename only: use out_dir
+      - Filename only: use current directory
     """
     if output:
         output_path = Path(output).expanduser()
@@ -51,18 +79,15 @@ def get_output_components(output: str | None, out_dir: str, prefix: str):
             out_dir_path = output_path.parent
             out_dir_path.mkdir(parents=True, exist_ok=True)
         elif output_path.parent != Path("."):
-            # Has directory component like "foo/bar.wav"
             out_dir_path = output_path.parent
             out_dir_path.mkdir(parents=True, exist_ok=True)
         else:
-            # Just filename like "output.wav" - use current directory
             out_dir_path = Path(".")
 
         stem = output_path.stem
         ext = output_path.suffix.lstrip(".") or "wav"
         return str(out_dir_path), stem, ext, True
 
-    # No output specified, use out_dir with timestamp
     out_dir_path = Path(out_dir).expanduser()
     out_dir_path.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -70,7 +95,7 @@ def get_output_components(output: str | None, out_dir: str, prefix: str):
 
 
 def run_custom_voice(args):
-    """CustomVoice: built-in voices."""
+    """CustomVoice: built-in voices with optional style control."""
     model = args.model or DEFAULT_MODELS["custom-voice"]
     out_dir, prefix, audio_format, join_audio = get_output_components(
         args.output, args.out_dir, "custom_voice"
@@ -82,7 +107,8 @@ def run_custom_voice(args):
         voice=args.voice,
         instruct=args.instruct,
         speed=args.speed or 1.0,
-        lang_code=args.lang_code,
+        lang_code=args.lang_code.lower() if args.lang_code != "auto" else "auto",
+        temperature=args.temperature,
         output_path=out_dir,
         file_prefix=prefix,
         audio_format=audio_format,
@@ -93,7 +119,7 @@ def run_custom_voice(args):
 
 
 def run_voice_design(args):
-    """VoiceDesign: describe a new voice."""
+    """VoiceDesign: describe a new voice in natural language."""
     model = args.model or DEFAULT_MODELS["voice-design"]
     out_dir, prefix, audio_format, join_audio = get_output_components(
         args.output, args.out_dir, "voice_design"
@@ -105,7 +131,8 @@ def run_voice_design(args):
         voice=None,
         instruct=args.instruct,
         speed=args.speed or 1.0,
-        lang_code=args.lang_code,
+        lang_code=args.lang_code.lower() if args.lang_code != "auto" else "auto",
+        temperature=args.temperature,
         output_path=out_dir,
         file_prefix=prefix,
         audio_format=audio_format,
@@ -116,7 +143,7 @@ def run_voice_design(args):
 
 
 def run_voice_clone(args):
-    """VoiceClone: clone from reference audio."""
+    """VoiceClone: clone a voice from reference audio."""
     model = args.model or DEFAULT_MODELS["voice-clone"]
     out_dir, prefix, audio_format, join_audio = get_output_components(
         args.output, args.out_dir, "voice_clone"
@@ -129,6 +156,8 @@ def run_voice_clone(args):
         ref_audio=args.ref_audio,
         ref_text=args.ref_text,
         speed=args.speed or 1.0,
+        lang_code=args.lang_code.lower() if args.lang_code != "auto" else "auto",
+        temperature=args.temperature,
         output_path=out_dir,
         file_prefix=prefix,
         audio_format=audio_format,
@@ -144,70 +173,85 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # CustomVoice
-  python run_tts.py custom-voice --text "Hello" --voice Vivian --lang_code Chinese
+  # CustomVoice (built-in voices)
+  python run_tts.py custom-voice --text "Hello world" --voice Ryan --lang_code English
 
-  # VoiceDesign
-  python run_tts.py voice-design --text "Hello" --instruct "mature male announcer" --lang_code English
+  # CustomVoice with style control
+  python run_tts.py custom-voice --text "Breaking news today." --voice Uncle_Fu \\
+    --lang_code Chinese --instruct "news anchor, calm and authoritative"
 
-  # VoiceClone
-  python run_tts.py voice-clone --text "Hello" --ref_audio ref.wav --ref_text "Reference transcript"
+  # VoiceDesign (create voice from description)
+  python run_tts.py voice-design --text "Welcome back." --lang_code English \\
+    --instruct "warm, mature male narrator with low pitch and gentle tone"
+
+  # VoiceClone (clone from reference audio)
+  python run_tts.py voice-clone --text "Your new line here." \\
+    --ref_audio reference.wav --ref_text "Transcript of the reference audio"
         """,
     )
 
     subparsers = parser.add_subparsers(dest="mode", help="TTS mode")
 
+    # CustomVoice subcommand
     cv_parser = subparsers.add_parser("custom-voice", help="Generate with built-in voices")
     cv_parser.add_argument("--text", required=True, help="Text to synthesize")
     cv_parser.add_argument(
         "--voice",
         default="Vivian",
-        choices=[
-            "Vivian",
-            "Serena",
-            "Uncle_Fu",
-            "Dylan",
-            "Eric",
-            "Ryan",
-            "Aiden",
-            "Ono_Anna",
-            "Sohee",
-        ],
+        choices=VOICES,
         help="Voice name (default: Vivian)",
     )
     cv_parser.add_argument(
         "--lang_code",
-        default="Chinese",
-        choices=["Chinese", "English", "Japanese", "Korean"],
-        help="Language (default: Chinese)",
+        default="auto",
+        choices=LANGUAGES,
+        help="Language (default: auto-detect)",
     )
-    cv_parser.add_argument("--instruct", help="Style instruction (e.g., calm, warm)")
+    cv_parser.add_argument(
+        "--instruct",
+        help="Style instruction (e.g., 'calm and warm', 'excited and energetic')",
+    )
     cv_parser.add_argument("--model", help="Model name (default: 0.6B-CustomVoice-4bit)")
-    cv_parser.add_argument("--speed", type=float, help="Speech speed")
-    cv_parser.add_argument("--output", help="Output file name (e.g., output.wav)")
+    cv_parser.add_argument("--speed", type=float, default=1.0, help="Speech speed (default: 1.0)")
+    cv_parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature (default: 0.7)")
+    cv_parser.add_argument("--output", help="Output file path (e.g., output.wav)")
     cv_parser.add_argument("--out-dir", default="./outputs", help="Output directory when --output not specified")
 
-    vd_parser = subparsers.add_parser("voice-design", help="Design a new voice")
+    # VoiceDesign subcommand
+    vd_parser = subparsers.add_parser("voice-design", help="Create a voice from text description")
     vd_parser.add_argument("--text", required=True, help="Text to synthesize")
-    vd_parser.add_argument("--instruct", required=True, help="Voice description")
+    vd_parser.add_argument(
+        "--instruct",
+        required=True,
+        help="Voice description (e.g., 'warm, mature male narrator with low pitch')",
+    )
     vd_parser.add_argument(
         "--lang_code",
-        default="Chinese",
-        choices=["Chinese", "English", "Japanese", "Korean"],
-        help="Language (default: Chinese)",
+        default="auto",
+        choices=LANGUAGES,
+        help="Language (default: auto-detect)",
     )
     vd_parser.add_argument("--model", help="Model name (default: 1.7B-VoiceDesign-5bit)")
-    vd_parser.add_argument("--speed", type=float, help="Speech speed")
-    vd_parser.add_argument("--output", help="Output file name")
+    vd_parser.add_argument("--speed", type=float, default=1.0, help="Speech speed (default: 1.0)")
+    vd_parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature (default: 0.7)")
+    vd_parser.add_argument("--output", help="Output file path")
     vd_parser.add_argument("--out-dir", default="./outputs", help="Output directory when --output not specified")
 
-    vc_parser = subparsers.add_parser("voice-clone", help="Clone from reference audio")
+    # VoiceClone subcommand
+    vc_parser = subparsers.add_parser("voice-clone", help="Clone voice from reference audio")
     vc_parser.add_argument("--text", required=True, help="Text to synthesize")
-    vc_parser.add_argument("--ref_audio", required=True, help="Reference audio path")
-    vc_parser.add_argument("--ref_text", required=True, help="Reference transcript")
+    vc_parser.add_argument("--ref_audio", required=True, help="Reference audio file (5-10s recommended)")
+    vc_parser.add_argument("--ref_text", required=True, help="Transcript of the reference audio")
+    vc_parser.add_argument(
+        "--lang_code",
+        default="auto",
+        choices=LANGUAGES,
+        help="Language (default: auto-detect)",
+    )
     vc_parser.add_argument("--model", help="Model name (default: 0.6B-Base-4bit)")
-    vc_parser.add_argument("--speed", type=float, help="Speech speed")
-    vc_parser.add_argument("--output", help="Output file name")
+    vc_parser.add_argument("--speed", type=float, default=1.0, help="Speech speed (default: 1.0)")
+    vc_parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature (default: 0.7)")
+    vc_parser.add_argument("--output", help="Output file path")
     vc_parser.add_argument("--out-dir", default="./outputs", help="Output directory when --output not specified")
 
     args = parser.parse_args()

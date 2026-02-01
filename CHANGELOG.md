@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [1.2.0] - 2026-02-02
+
+### Added
+- Support for 11 languages: Chinese, English, Japanese, Korean, French, German, Spanish, Portuguese, Italian, Russian.
+- Auto-detect language option (`--lang_code auto`).
+- Temperature parameter (`--temperature`) for controlling voice variation.
+- Comprehensive voice selection guide and style instruction examples in documentation.
+- Performance metrics and troubleshooting table in SKILL.md.
+
+### Changed
+- Default language changed from `Chinese` to `auto` (auto-detect).
+- Improved CLI help with detailed examples for all three modes.
+- Updated SKILL.md with accurate mlx-audio API documentation.
+- Enhanced voice and language documentation with character descriptions.
+
 ## [1.1.0] - 2026-02-01
 
 ### Changed
