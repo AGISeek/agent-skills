@@ -3,7 +3,7 @@ name: qwen3-tts-mlx
 description: Local Qwen3-TTS speech synthesis on Apple Silicon via MLX. Use for offline narration, audiobooks, video voiceovers, and multilingual TTS.
 metadata:
   author: agiseek
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Qwen3-TTS MLX

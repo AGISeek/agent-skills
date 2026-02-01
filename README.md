@@ -4,6 +4,8 @@ A collection of skills for AI coding agents. Skills are packaged instructions an
 
 Skills follow the Agent Skills format.
 
+Chinese version: [README.zh-CN.md](README.zh-CN.md)
+
 ## Available Skills
 
 ### qwen3-tts-mlx

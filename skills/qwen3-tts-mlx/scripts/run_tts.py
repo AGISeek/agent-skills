@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Qwen3-TTS MLX 语音合成脚本
-专为 Apple Silicon (M1/M2/M3/M4) 优化
+Qwen3-TTS MLX CLI runner
+Optimized for Apple Silicon (M1/M2/M3/M4)
 
-依赖安装：
+Dependencies:
     pip install mlx-audio soundfile
 
-使用示例：
-    # CustomVoice 模式
-    python run_tts.py custom-voice --text "你好" --voice Vivian --lang_code Chinese
+Examples:
+    # CustomVoice
+    python run_tts.py custom-voice --text "Hello" --voice Vivian --lang_code Chinese
 
-    # VoiceDesign 模式
-    python run_tts.py voice-design --text "你好" --instruct "可爱的女声"
+    # VoiceDesign
+    python run_tts.py voice-design --text "Hello" --instruct "warm, youthful female voice"
 
-    # VoiceClone 模式
-    python run_tts.py voice-clone --text "你好" --ref_audio ref.wav --ref_text "参考文本"
+    # VoiceClone
+    python run_tts.py voice-clone --text "Hello" --ref_audio ref.wav --ref_text "Reference transcript"
 """
 
 import argparse
@@ -25,7 +25,6 @@ from pathlib import Path
 from datetime import datetime
 
 
-# 默认模型
 DEFAULT_MODELS = {
     "custom-voice": "mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit",
     "voice-design": "mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit",
@@ -34,7 +33,7 @@ DEFAULT_MODELS = {
 
 
 def get_output_path(output: str, out_dir: str, prefix: str = "tts") -> str:
-    """生成输出文件路径"""
+    """Build the output file path."""
     out_dir_path = Path(out_dir).expanduser()
     out_dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -48,7 +47,7 @@ def get_output_path(output: str, out_dir: str, prefix: str = "tts") -> str:
 
 
 def run_custom_voice(args):
-    """CustomVoice 模式：使用内置音色"""
+    """CustomVoice: built-in voices."""
     model = args.model or DEFAULT_MODELS["custom-voice"]
     output_path = get_output_path(args.output, args.out_dir, "custom_voice")
 
@@ -68,28 +67,28 @@ def run_custom_voice(args):
         cmd.extend(["--speed", str(args.speed)])
 
     print("=" * 50)
-    print("🎵 Qwen3-TTS MLX - CustomVoice 模式")
+    print("Qwen3-TTS MLX - CustomVoice")
     print("=" * 50)
-    print(f"模型: {model}")
-    print(f"文本: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
+    print(f"Model: {model}")
+    print(f"Text: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
     print(f"Voice: {args.voice}")
-    print(f"语言: {args.lang_code}")
+    print(f"Language: {args.lang_code}")
     if args.instruct:
-        print(f"情感: {args.instruct}")
-    print(f"输出: {output_path}")
+        print(f"Style: {args.instruct}")
+    print(f"Output: {output_path}")
     print("-" * 50)
 
     result = subprocess.run(cmd)
 
     if result.returncode == 0:
-        print(f"\n✅ 已保存: {output_path}")
+        print(f"\nSaved: {output_path}")
     else:
-        print(f"\n❌ 生成失败")
+        print("\nGeneration failed")
         sys.exit(1)
 
 
 def run_voice_design(args):
-    """VoiceDesign 模式：设计自定义音色"""
+    """VoiceDesign: describe a new voice."""
     model = args.model or DEFAULT_MODELS["voice-design"]
     output_path = get_output_path(args.output, args.out_dir, "voice_design")
 
@@ -106,25 +105,25 @@ def run_voice_design(args):
         cmd.extend(["--speed", str(args.speed)])
 
     print("=" * 50)
-    print("🎵 Qwen3-TTS MLX - VoiceDesign 模式")
+    print("Qwen3-TTS MLX - VoiceDesign")
     print("=" * 50)
-    print(f"模型: {model}")
-    print(f"文本: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
-    print(f"音色设计: {args.instruct}")
-    print(f"输出: {output_path}")
+    print(f"Model: {model}")
+    print(f"Text: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
+    print(f"Voice design: {args.instruct}")
+    print(f"Output: {output_path}")
     print("-" * 50)
 
     result = subprocess.run(cmd)
 
     if result.returncode == 0:
-        print(f"\n✅ 已保存: {output_path}")
+        print(f"\nSaved: {output_path}")
     else:
-        print(f"\n❌ 生成失败")
+        print("\nGeneration failed")
         sys.exit(1)
 
 
 def run_voice_clone(args):
-    """VoiceClone 模式：克隆参考音频"""
+    """VoiceClone: clone from reference audio."""
     model = args.model or DEFAULT_MODELS["voice-clone"]
     output_path = get_output_path(args.output, args.out_dir, "voice_clone")
 
@@ -141,78 +140,94 @@ def run_voice_clone(args):
         cmd.extend(["--speed", str(args.speed)])
 
     print("=" * 50)
-    print("🎵 Qwen3-TTS MLX - VoiceClone 模式")
+    print("Qwen3-TTS MLX - VoiceClone")
     print("=" * 50)
-    print(f"模型: {model}")
-    print(f"文本: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
-    print(f"参考音频: {args.ref_audio}")
-    print(f"输出: {output_path}")
+    print(f"Model: {model}")
+    print(f"Text: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
+    print(f"Reference audio: {args.ref_audio}")
+    print(f"Output: {output_path}")
     print("-" * 50)
 
     result = subprocess.run(cmd)
 
     if result.returncode == 0:
-        print(f"\n✅ 已保存: {output_path}")
+        print(f"\nSaved: {output_path}")
     else:
-        print(f"\n❌ 生成失败")
+        print("\nGeneration failed")
         sys.exit(1)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Qwen3-TTS MLX 语音合成",
+        description="Qwen3-TTS MLX speech synthesis",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  # CustomVoice - 使用内置音色
-  python run_tts.py custom-voice --text "你好" --voice Vivian --lang_code Chinese
+Examples:
+  # CustomVoice
+  python run_tts.py custom-voice --text "Hello" --voice Vivian --lang_code Chinese
 
-  # VoiceDesign - 设计自定义音色
-  python run_tts.py voice-design --text "你好" --instruct "成熟稳重的男性播音员" --lang_code Chinese
+  # VoiceDesign
+  python run_tts.py voice-design --text "Hello" --instruct "mature male announcer" --lang_code English
 
-  # VoiceClone - 克隆语音
-  python run_tts.py voice-clone --text "你好" --ref_audio ref.wav --ref_text "参考文本"
+  # VoiceClone
+  python run_tts.py voice-clone --text "Hello" --ref_audio ref.wav --ref_text "Reference transcript"
         """
     )
 
-    subparsers = parser.add_subparsers(dest="mode", help="TTS 模式")
+    subparsers = parser.add_subparsers(dest="mode", help="TTS mode")
 
-    # CustomVoice 子命令
-    cv_parser = subparsers.add_parser("custom-voice", help="使用内置音色生成语音")
-    cv_parser.add_argument("--text", required=True, help="要合成的文本")
-    cv_parser.add_argument("--voice", default="Vivian",
-                          choices=["Vivian", "Serena", "Uncle_Fu", "Dylan", "Eric", "Ryan", "Aiden"],
-                          help="Voice 名称 (默认: Vivian)")
-    cv_parser.add_argument("--lang_code", default="Chinese",
-                          choices=["Chinese", "English", "Japanese", "Korean"],
-                          help="语言 (默认: Chinese)")
-    cv_parser.add_argument("--instruct", help="情感/语气控制 (如: 温柔的语气)")
-    cv_parser.add_argument("--model", help="模型名称 (默认: 0.6B-CustomVoice-4bit)")
-    cv_parser.add_argument("--speed", type=float, help="语速调整")
-    cv_parser.add_argument("--output", help="输出文件名")
-    cv_parser.add_argument("--out-dir", default="./outputs", help="输出目录 (默认: ./outputs)")
+    cv_parser = subparsers.add_parser("custom-voice", help="Generate with built-in voices")
+    cv_parser.add_argument("--text", required=True, help="Text to synthesize")
+    cv_parser.add_argument(
+        "--voice",
+        default="Vivian",
+        choices=[
+            "Vivian",
+            "Serena",
+            "Uncle_Fu",
+            "Dylan",
+            "Eric",
+            "Ryan",
+            "Aiden",
+            "Ono_Anna",
+            "Sohee",
+        ],
+        help="Voice name (default: Vivian)",
+    )
+    cv_parser.add_argument(
+        "--lang_code",
+        default="Chinese",
+        choices=["Chinese", "English", "Japanese", "Korean"],
+        help="Language (default: Chinese)",
+    )
+    cv_parser.add_argument("--instruct", help="Style instruction (e.g., calm, warm)")
+    cv_parser.add_argument("--model", help="Model name (default: 0.6B-CustomVoice-4bit)")
+    cv_parser.add_argument("--speed", type=float, help="Speech speed")
+    cv_parser.add_argument("--output", help="Output file name")
+    cv_parser.add_argument("--out-dir", default="./outputs", help="Output directory (default: ./outputs)")
 
-    # VoiceDesign 子命令
-    vd_parser = subparsers.add_parser("voice-design", help="设计自定义音色")
-    vd_parser.add_argument("--text", required=True, help="要合成的文本")
-    vd_parser.add_argument("--instruct", required=True, help="音色描述 (如: 可爱活泼的萝莉女声)")
-    vd_parser.add_argument("--lang_code", default="Chinese",
-                          choices=["Chinese", "English", "Japanese", "Korean"],
-                          help="语言 (默认: Chinese)")
-    vd_parser.add_argument("--model", help="模型名称 (默认: 1.7B-VoiceDesign-5bit)")
-    vd_parser.add_argument("--speed", type=float, help="语速调整")
-    vd_parser.add_argument("--output", help="输出文件名")
-    vd_parser.add_argument("--out-dir", default="./outputs", help="输出目录 (默认: ./outputs)")
+    vd_parser = subparsers.add_parser("voice-design", help="Design a new voice")
+    vd_parser.add_argument("--text", required=True, help="Text to synthesize")
+    vd_parser.add_argument("--instruct", required=True, help="Voice description")
+    vd_parser.add_argument(
+        "--lang_code",
+        default="Chinese",
+        choices=["Chinese", "English", "Japanese", "Korean"],
+        help="Language (default: Chinese)",
+    )
+    vd_parser.add_argument("--model", help="Model name (default: 1.7B-VoiceDesign-5bit)")
+    vd_parser.add_argument("--speed", type=float, help="Speech speed")
+    vd_parser.add_argument("--output", help="Output file name")
+    vd_parser.add_argument("--out-dir", default="./outputs", help="Output directory (default: ./outputs)")
 
-    # VoiceClone 子命令
-    vc_parser = subparsers.add_parser("voice-clone", help="克隆参考音频的声音")
-    vc_parser.add_argument("--text", required=True, help="要合成的文本")
-    vc_parser.add_argument("--ref_audio", required=True, help="参考音频文件路径")
-    vc_parser.add_argument("--ref_text", required=True, help="参考音频对应的文本")
-    vc_parser.add_argument("--model", help="模型名称 (默认: 0.6B-Base-4bit)")
-    vc_parser.add_argument("--speed", type=float, help="语速调整")
-    vc_parser.add_argument("--output", help="输出文件名")
-    vc_parser.add_argument("--out-dir", default="./outputs", help="输出目录 (默认: ./outputs)")
+    vc_parser = subparsers.add_parser("voice-clone", help="Clone from reference audio")
+    vc_parser.add_argument("--text", required=True, help="Text to synthesize")
+    vc_parser.add_argument("--ref_audio", required=True, help="Reference audio path")
+    vc_parser.add_argument("--ref_text", required=True, help="Reference transcript")
+    vc_parser.add_argument("--model", help="Model name (default: 0.6B-Base-4bit)")
+    vc_parser.add_argument("--speed", type=float, help="Speech speed")
+    vc_parser.add_argument("--output", help="Output file name")
+    vc_parser.add_argument("--out-dir", default="./outputs", help="Output directory (default: ./outputs)")
 
     args = parser.parse_args()
 
