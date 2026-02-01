@@ -19,10 +19,11 @@ Examples:
 """
 
 import argparse
-import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+from mlx_audio.tts.generate import generate_audio
 
 
 DEFAULT_MODELS = {
@@ -32,129 +33,117 @@ DEFAULT_MODELS = {
 }
 
 
-def get_output_path(output: str, out_dir: str, prefix: str = "tts") -> str:
-    """Build the output file path."""
+def configure_transformers() -> None:
+    """Reduce noisy warnings and enable Mistral regex fix when available."""
+    try:
+        from transformers.utils import logging as hf_logging
+
+        hf_logging.set_verbosity_error()
+    except Exception:
+        pass
+
+    try:
+        from transformers import AutoTokenizer
+    except Exception:
+        return
+
+    original = AutoTokenizer.from_pretrained
+    if getattr(original, "_qwen3_fix_mistral_regex", False):
+        return
+
+    def patched(*args, **kwargs):
+        kwargs.setdefault("fix_mistral_regex", True)
+        return original(*args, **kwargs)
+
+    patched._qwen3_fix_mistral_regex = True
+    AutoTokenizer.from_pretrained = patched
+
+
+def get_output_components(output: str | None, out_dir: str, prefix: str):
+    """Resolve output directory, prefix, and format."""
     out_dir_path = Path(out_dir).expanduser()
     out_dir_path.mkdir(parents=True, exist_ok=True)
 
     if output:
-        if Path(output).is_absolute():
-            return output
-        return str(out_dir_path / output)
+        output_path = Path(output)
+        if output_path.is_absolute():
+            out_dir_path = output_path.parent
+        name = output_path.name
+        stem = Path(name).stem
+        ext = Path(name).suffix.lstrip(".") or "wav"
+        return str(out_dir_path), stem, ext, True
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return str(out_dir_path / f"{prefix}_{timestamp}.wav")
+    return str(out_dir_path), f"{prefix}_{timestamp}", "wav", False
 
 
 def run_custom_voice(args):
     """CustomVoice: built-in voices."""
     model = args.model or DEFAULT_MODELS["custom-voice"]
-    output_path = get_output_path(args.output, args.out_dir, "custom_voice")
+    out_dir, prefix, audio_format, join_audio = get_output_components(
+        args.output, args.out_dir, "custom_voice"
+    )
 
-    cmd = [
-        sys.executable, "-m", "mlx_audio.tts.generate",
-        "--model", model,
-        "--text", args.text,
-        "--voice", args.voice,
-        "--lang_code", args.lang_code,
-        "--output_path", output_path,
-    ]
-
-    if args.instruct:
-        cmd.extend(["--instruct", args.instruct])
-
-    if args.speed:
-        cmd.extend(["--speed", str(args.speed)])
-
-    print("=" * 50)
-    print("Qwen3-TTS MLX - CustomVoice")
-    print("=" * 50)
-    print(f"Model: {model}")
-    print(f"Text: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
-    print(f"Voice: {args.voice}")
-    print(f"Language: {args.lang_code}")
-    if args.instruct:
-        print(f"Style: {args.instruct}")
-    print(f"Output: {output_path}")
-    print("-" * 50)
-
-    result = subprocess.run(cmd)
-
-    if result.returncode == 0:
-        print(f"\nSaved: {output_path}")
-    else:
-        print("\nGeneration failed")
-        sys.exit(1)
+    generate_audio(
+        text=args.text,
+        model=model,
+        voice=args.voice,
+        instruct=args.instruct,
+        speed=args.speed or 1.0,
+        lang_code=args.lang_code,
+        output_path=out_dir,
+        file_prefix=prefix,
+        audio_format=audio_format,
+        join_audio=join_audio,
+        play=False,
+        verbose=True,
+    )
 
 
 def run_voice_design(args):
     """VoiceDesign: describe a new voice."""
     model = args.model or DEFAULT_MODELS["voice-design"]
-    output_path = get_output_path(args.output, args.out_dir, "voice_design")
+    out_dir, prefix, audio_format, join_audio = get_output_components(
+        args.output, args.out_dir, "voice_design"
+    )
 
-    cmd = [
-        sys.executable, "-m", "mlx_audio.tts.generate",
-        "--model", model,
-        "--text", args.text,
-        "--lang_code", args.lang_code,
-        "--instruct", args.instruct,
-        "--output_path", output_path,
-    ]
-
-    if args.speed:
-        cmd.extend(["--speed", str(args.speed)])
-
-    print("=" * 50)
-    print("Qwen3-TTS MLX - VoiceDesign")
-    print("=" * 50)
-    print(f"Model: {model}")
-    print(f"Text: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
-    print(f"Voice design: {args.instruct}")
-    print(f"Output: {output_path}")
-    print("-" * 50)
-
-    result = subprocess.run(cmd)
-
-    if result.returncode == 0:
-        print(f"\nSaved: {output_path}")
-    else:
-        print("\nGeneration failed")
-        sys.exit(1)
+    generate_audio(
+        text=args.text,
+        model=model,
+        voice=None,
+        instruct=args.instruct,
+        speed=args.speed or 1.0,
+        lang_code=args.lang_code,
+        output_path=out_dir,
+        file_prefix=prefix,
+        audio_format=audio_format,
+        join_audio=join_audio,
+        play=False,
+        verbose=True,
+    )
 
 
 def run_voice_clone(args):
     """VoiceClone: clone from reference audio."""
     model = args.model or DEFAULT_MODELS["voice-clone"]
-    output_path = get_output_path(args.output, args.out_dir, "voice_clone")
+    out_dir, prefix, audio_format, join_audio = get_output_components(
+        args.output, args.out_dir, "voice_clone"
+    )
 
-    cmd = [
-        sys.executable, "-m", "mlx_audio.tts.generate",
-        "--model", model,
-        "--text", args.text,
-        "--ref_audio", args.ref_audio,
-        "--ref_text", args.ref_text,
-        "--output_path", output_path,
-    ]
-
-    if args.speed:
-        cmd.extend(["--speed", str(args.speed)])
-
-    print("=" * 50)
-    print("Qwen3-TTS MLX - VoiceClone")
-    print("=" * 50)
-    print(f"Model: {model}")
-    print(f"Text: {args.text[:50]}{'...' if len(args.text) > 50 else ''}")
-    print(f"Reference audio: {args.ref_audio}")
-    print(f"Output: {output_path}")
-    print("-" * 50)
-
-    result = subprocess.run(cmd)
-
-    if result.returncode == 0:
-        print(f"\nSaved: {output_path}")
-    else:
-        print("\nGeneration failed")
-        sys.exit(1)
+    generate_audio(
+        text=args.text,
+        model=model,
+        voice=None,
+        ref_audio=args.ref_audio,
+        ref_text=args.ref_text,
+        speed=args.speed or 1.0,
+        output_path=out_dir,
+        file_prefix=prefix,
+        audio_format=audio_format,
+        join_audio=join_audio,
+        play=False,
+        verbose=True,
+    )
 
 
 def main():
@@ -171,7 +160,7 @@ Examples:
 
   # VoiceClone
   python run_tts.py voice-clone --text "Hello" --ref_audio ref.wav --ref_text "Reference transcript"
-        """
+        """,
     )
 
     subparsers = parser.add_subparsers(dest="mode", help="TTS mode")
@@ -234,6 +223,8 @@ Examples:
     if not args.mode:
         parser.print_help()
         sys.exit(1)
+
+    configure_transformers()
 
     if args.mode == "custom-voice":
         run_custom_voice(args)

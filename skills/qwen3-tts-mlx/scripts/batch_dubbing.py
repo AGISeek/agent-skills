@@ -13,12 +13,39 @@ Example:
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
+from mlx_audio.tts.generate import generate_audio
+
 
 DEFAULT_MODEL = "mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit"
+
+
+def configure_transformers() -> None:
+    """Reduce noisy warnings and enable Mistral regex fix when available."""
+    try:
+        from transformers.utils import logging as hf_logging
+
+        hf_logging.set_verbosity_error()
+    except Exception:
+        pass
+
+    try:
+        from transformers import AutoTokenizer
+    except Exception:
+        return
+
+    original = AutoTokenizer.from_pretrained
+    if getattr(original, "_qwen3_fix_mistral_regex", False):
+        return
+
+    def patched(*args, **kwargs):
+        kwargs.setdefault("fix_mistral_regex", True)
+        return original(*args, **kwargs)
+
+    patched._qwen3_fix_mistral_regex = True
+    AutoTokenizer.from_pretrained = patched
 
 
 def load_dubbing_script(input_path: str) -> list:
@@ -36,27 +63,28 @@ def generate_segment(
     model: str,
 ) -> bool:
     """Generate a single segment."""
-    cmd = [
-        sys.executable,
-        "-m",
-        "mlx_audio.tts.generate",
-        "--model",
-        model,
-        "--text",
-        text,
-        "--voice",
-        voice,
-        "--lang_code",
-        lang_code,
-        "--output_path",
-        output_path,
-    ]
+    output_file = Path(output_path)
+    out_dir = str(output_file.parent)
+    file_prefix = output_file.stem
+    audio_format = output_file.suffix.lstrip(".") or "wav"
 
-    if instruct:
-        cmd.extend(["--instruct", instruct])
-
-    result = subprocess.run(cmd, capture_output=True)
-    return result.returncode == 0
+    try:
+        generate_audio(
+            text=text,
+            model=model,
+            voice=voice,
+            instruct=instruct,
+            lang_code=lang_code,
+            output_path=out_dir,
+            file_prefix=file_prefix,
+            audio_format=audio_format,
+            join_audio=True,
+            play=False,
+            verbose=False,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def merge_audio_files(
@@ -67,67 +95,35 @@ def merge_audio_files(
     speakers: list,
 ) -> bool:
     """Merge audio files with optional gaps."""
-    import tempfile
-
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-        prev_speaker = None
-        for i, (seg_file, speaker) in enumerate(zip(segment_files, speakers)):
-            f.write(f"file '{seg_file}'\n")
-
-            if i < len(segment_files) - 1:
-                gap = (
-                    character_switch_gap
-                    if prev_speaker and prev_speaker != speaker
-                    else silence_gap
-                )
-                f.write(f"file 'anullsrc=r=24000:cl=mono:d={gap}'\n")
-
-            prev_speaker = speaker
-
-        list_file = f.name
-
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        list_file,
-        "-c",
-        "copy",
-        output_path,
-    ]
-
     try:
         import numpy as np
         import soundfile as sf
-
-        all_audio = []
-        sample_rate = 24000
-
-        for i, (seg_file, speaker) in enumerate(zip(segment_files, speakers)):
-            audio, sr = sf.read(seg_file)
-            all_audio.append(audio)
-
-            if i < len(segment_files) - 1:
-                gap = (
-                    character_switch_gap
-                    if prev_speaker and prev_speaker != speaker
-                    else silence_gap
-                )
-                silence = np.zeros(int(sample_rate * gap), dtype=np.float32)
-                all_audio.append(silence)
-
-            prev_speaker = speaker
-
-        final_audio = np.concatenate(all_audio)
-        sf.write(output_path, final_audio, sample_rate)
-        return True
     except Exception as e:
-        print(f"Merge failed: {e}")
+        print(f"Missing merge dependencies: {e}")
         return False
+
+    all_audio = []
+    sample_rate = 24000
+    prev_speaker = None
+
+    for i, (seg_file, speaker) in enumerate(zip(segment_files, speakers)):
+        audio, sr = sf.read(seg_file)
+        all_audio.append(audio)
+
+        if i < len(segment_files) - 1:
+            gap = (
+                character_switch_gap
+                if prev_speaker and prev_speaker != speaker
+                else silence_gap
+            )
+            silence = np.zeros(int(sample_rate * gap), dtype=np.float32)
+            all_audio.append(silence)
+
+        prev_speaker = speaker
+
+    final_audio = np.concatenate(all_audio)
+    sf.write(output_path, final_audio, sample_rate)
+    return True
 
 
 def run_batch_dubbing(args):
@@ -243,6 +239,8 @@ Example:
     )
 
     args = parser.parse_args()
+
+    configure_transformers()
 
     print("=" * 50)
     print("Qwen3-TTS MLX Batch Dubbing")

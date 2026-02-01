@@ -3,7 +3,7 @@ name: qwen3-tts-mlx
 description: Local Qwen3-TTS speech synthesis on Apple Silicon via MLX. Use for offline narration, audiobooks, video voiceovers, and multilingual TTS.
 metadata:
   author: agiseek
-  version: "1.0.1"
+  version: "1.0.2"
 ---
 
 # Qwen3-TTS MLX
@@ -29,24 +29,22 @@ brew install ffmpeg
 ### Single Sentence
 
 ```bash
-python -m mlx_audio.tts.generate \
-  --model mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit \
+python scripts/run_tts.py custom-voice \
   --text "Hello, welcome to local text to speech." \
   --voice Ryan \
   --lang_code English \
-  --output_path output.wav
+  --output output.wav
 ```
 
 ### With Style Control
 
 ```bash
-python -m mlx_audio.tts.generate \
-  --model mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit \
+python scripts/run_tts.py custom-voice \
   --text "Today we break down a long interview." \
   --voice Uncle_Fu \
   --lang_code Chinese \
   --instruct "news anchor tone, calm and clear" \
-  --output_path output.wav
+  --output output.wav
 ```
 
 ## Model Guide
@@ -78,13 +76,12 @@ python -m mlx_audio.tts.generate \
 Use built-in voices with optional style control.
 
 ```bash
-python -m mlx_audio.tts.generate \
-  --model mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-4bit \
+python scripts/run_tts.py custom-voice \
   --text "This is a test sentence." \
   --voice Vivian \
   --lang_code Chinese \
   --instruct "soft, slow delivery" \
-  --output_path output.wav
+  --output output.wav
 ```
 
 **Built-in Voices (CustomVoice)**
@@ -127,8 +124,7 @@ python -m mlx_audio.tts.generate \
 Describe the voice in natural language using `--instruct`.
 
 ```bash
-python -m mlx_audio.tts.generate \
-  --model mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit \
+python scripts/run_tts.py voice-design \
   --text "Welcome back." \
   --lang_code English \
   --instruct "warm, mature male narrator with low pitch"
@@ -141,8 +137,7 @@ Note: In VoiceDesign, `--instruct` describes timbre and identity, not emotion.
 Clone a voice from a short reference audio clip.
 
 ```bash
-python -m mlx_audio.tts.generate \
-  --model mlx-community/Qwen3-TTS-12Hz-0.6B-Base-4bit \
+python scripts/run_tts.py voice-clone \
   --text "Your new line goes here." \
   --ref_audio reference.wav \
   --ref_text "Transcript of the reference audio"
@@ -221,4 +216,5 @@ See `references/dubbing_format.md` for the JSON format.
 
 - If generation is slow, use the 4-bit CustomVoice model.
 - If voices sound off, keep sentences shorter and add punctuation.
+- If you see tokenizer regex warnings when calling mlx_audio directly, use the wrapper scripts in this skill (they enable `fix_mistral_regex`).
 - If you need a different identity, switch to VoiceDesign or VoiceClone.
