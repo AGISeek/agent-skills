@@ -8,6 +8,24 @@ Chinese version: [README.zh-CN.md](README.zh-CN.md)
 
 ## Available Skills
 
+### libvips-image
+
+High-performance image processing with libvips. Fast, memory-efficient operations for resize, convert, watermark, and batch processing.
+
+**Use when:**
+- Resizing, cropping, or creating thumbnails
+- Converting between formats (JPEG, PNG, WebP, AVIF, HEIC)
+- Adding watermarks or text overlays
+- Batch processing large numbers of images
+- Working with large images that need low memory usage
+
+**Features:**
+- 13 image operations (resize, thumbnail, convert, crop, rotate, watermark, composite, adjust, sharpen, blur, flip, grayscale, info)
+- Batch processing with parallel workers
+- Cross-platform: macOS, Linux, Windows
+- One-click installers with uv support
+- 10-100x less memory than ImageMagick/PIL
+
 ### qwen3-tts-mlx
 
 Local Qwen3-TTS speech synthesis on Apple Silicon via MLX. Supports CustomVoice, VoiceDesign, and VoiceClone for offline narration and multilingual TTS.

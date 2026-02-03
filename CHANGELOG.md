@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [1.3.0] - 2026-02-04
+
+### Added
+- **New Skill: libvips-image** - High-performance image processing with libvips
+  - 13 image operations: resize, thumbnail, convert, crop, rotate, watermark, composite, adjust, sharpen, blur, flip, grayscale, info
+  - Batch processing with parallel workers and JSON config support
+  - Cross-platform one-click installers (install.sh for macOS/Linux, install.ps1 for Windows)
+  - Run wrappers that handle library paths (run.sh, run.bat)
+  - Prefers **uv** for Python package management
+  - Supports JPEG, PNG, WebP, AVIF, HEIC, TIFF, GIF, PDF, SVG formats
+  - Streaming architecture for low memory usage (10-100x less than ImageMagick/PIL)
+
 ## [1.2.0] - 2026-02-02
 
 ### Added
