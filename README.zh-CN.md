@@ -6,6 +6,24 @@
 
 ## 可用技能
 
+### libvips-image
+
+基于 libvips 的高性能图像处理技能。快速、低内存消耗的图像缩放、格式转换、水印添加和批量处理。
+
+**适用场景：**
+- 图像缩放、裁剪、生成缩略图
+- 格式转换（JPEG、PNG、WebP、AVIF、HEIC）
+- 添加水印或文字叠加
+- 批量处理大量图像
+- 处理大尺寸图像（低内存占用）
+
+**特性：**
+- 13 种图像操作（resize、thumbnail、convert、crop、rotate、watermark、composite、adjust、sharpen、blur、flip、grayscale、info）
+- 并行批量处理
+- 跨平台：macOS、Linux、Windows
+- 一键安装脚本，优先使用 uv
+- 内存占用比 ImageMagick/PIL 低 10-100 倍
+
 ### qwen3-tts-mlx
 
 基于 MLX 的 Qwen3‑TTS 本地语音合成技能，面向 Apple Silicon。支持 CustomVoice、VoiceDesign、VoiceClone，适合离线配音与多语言生成。
