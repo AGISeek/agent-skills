@@ -3,7 +3,7 @@ name: libvips-image
 description: High-performance image processing with libvips. Use for resizing, converting, watermarking, thumbnails, and batch image operations with low memory usage.
 metadata:
   author: agiseek
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # libvips Image Processing

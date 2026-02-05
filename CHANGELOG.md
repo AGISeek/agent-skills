@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [1.3.1] - 2026-02-05
+
+### Changed
+- **libvips-image skill** - Remove internal analysis documents
+  - Removed INSTALLATION_ANALYSIS.md (internal development documentation)
+  - Removed OPTIMIZATION_RECOMMENDATIONS.md (internal development documentation)
+
 ## [1.3.0] - 2026-02-04
 
 ### Added
