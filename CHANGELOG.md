@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.0.0] - 2026-02-07
+
+### Added
+- **New Skill: gemini-watermark** - Remove visible Gemini AI watermarks from images
+  - Mathematically accurate reverse alpha blending algorithm
+  - Three-stage watermark detection (Spatial NCC, Gradient NCC, Variance Analysis)
+  - Pre-built binaries for macOS (Apple Silicon / Intel), Linux, Windows
+  - One-click installer script (no Rust toolchain required)
+  - Auto-detect watermark size (48x48 or 96x96 based on image dimensions)
+  - Batch processing for directories
+  - Supports JPEG, PNG, WebP, BMP formats
+
 ## [1.3.1] - 2026-02-05
 
 ### Changed

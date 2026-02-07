@@ -8,6 +8,22 @@ Chinese version: [README.zh-CN.md](README.zh-CN.md)
 
 ## Available Skills
 
+### gemini-watermark
+
+Remove visible Gemini AI watermarks from images via reverse alpha blending. Fast, offline, single binary with zero runtime dependencies.
+
+**Use when:**
+- Removing the Gemini star/sparkle logo watermark from AI-generated images
+- Batch processing a directory of Gemini-generated images
+- Cleaning images before publishing or sharing
+
+**Features:**
+- Mathematically accurate reverse alpha blending
+- Three-stage watermark detection (skip non-watermarked images)
+- Pre-built binaries for macOS, Linux, Windows
+- One-click installer (no Rust required)
+- Supports JPEG, PNG, WebP, BMP formats
+
 ### libvips-image
 
 High-performance image processing with libvips. Fast, memory-efficient operations for resize, convert, watermark, and batch processing.
