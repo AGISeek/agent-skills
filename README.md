@@ -20,8 +20,8 @@ Remove visible Gemini AI watermarks from images via reverse alpha blending. Fast
 **Features:**
 - Mathematically accurate reverse alpha blending
 - Three-stage watermark detection (skip non-watermarked images)
-- Pre-built binaries for macOS, Linux, Windows
-- One-click installer (no Rust required)
+- Pre-built binaries for macOS, Linux, Windows (SHA256-verified, requires explicit consent)
+- Build from source via `cargo install` (recommended for security-sensitive environments)
 - Supports JPEG, PNG, WebP, BMP formats
 
 ### libvips-image

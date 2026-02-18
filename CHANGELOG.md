@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.0.1] - 2026-02-18
+
+### Security (gemini-watermark)
+
+- **Mandatory SHA256 verification** — installer now aborts instead of warning when the checksum file is unavailable, preventing installation of unverified binaries
+- **Explicit user consent** — installer prints a third-party disclosure banner and requires interactive confirmation (`y`) before downloading; pass `--yes` to skip in scripts
+- **Removed auto-execution** — installer no longer runs the downloaded binary with `--version` immediately after install; a manual verify command is printed instead
+- **API response sanitization** — `tag_name` returned by the GitHub Releases API is validated against `^v[0-9]+\.[0-9]+\.[0-9]+` before being interpolated into download URLs, preventing path-traversal via a malicious API response
+- **Prioritized source-based install** — `cargo install gemini-watermark-removal` is now the recommended (Option 1) install path; pre-built binary download is Option 2 with an explicit security notice
+
 ## [2.0.0] - 2026-02-07
 
 ### Added

@@ -3,14 +3,12 @@ name: gemini-watermark
 description: Remove visible Gemini AI watermarks from images via reverse alpha blending. Use for cleaning Gemini-generated images, removing the star/sparkle logo watermark, batch watermark removal.
 metadata:
   author: agiseek
-  version: "2.0.0"
+  version: "2.0.1"
 ---
 
 # Gemini Watermark Remover
 
 Remove the visible Gemini AI watermark (star/sparkle logo) from generated images using mathematically accurate reverse alpha blending. Fast, offline, single binary with zero runtime dependencies.
-
-**Repository**: [easynote-cc/gemini-watermark-removal](https://github.com/easynote-cc/gemini-watermark-removal)
 
 ## When to Use
 
@@ -23,23 +21,37 @@ Remove the visible Gemini AI watermark (star/sparkle logo) from generated images
 
 ### Install
 
+**Option 1 — Recommended: Build from source (Rust toolchain required)**
+
 ```bash
-# One-line install (downloads pre-built binary, no Rust required)
+cargo install gemini-watermark-removal
+gemini-watermark --version
+```
+
+Building from source lets you audit the code before running it and avoids
+dependency on a third-party pre-built binary.
+
+**Option 2 — Pre-built binary (third-party download)**
+
+> **Security notice:** The installer downloads a binary from the
+> `easynote-cc` GitHub organization, which is an independent third party.
+> Review the source at `https://github.com/easynote-cc/gemini-watermark-removal`
+> before proceeding. SHA256 verification is mandatory; the install will abort
+> if the checksum file is missing.
+
+```bash
+# Interactive (asks for confirmation before downloading)
 ./scripts/install.sh
 
-# Install specific version
+# Non-interactive (auto-confirm, e.g. in a script)
+./scripts/install.sh --yes
+
+# Install a specific pinned version
 VERSION=v0.1.1 ./scripts/install.sh
 ```
 
-Supported platforms:
-- macOS (Apple Silicon / Intel)
-- Linux (x86_64 / ARM64)
-- Windows (x86_64, via Git Bash / MSYS2)
-
-Alternative install via Cargo (requires Rust toolchain):
-```bash
-cargo install gemini-watermark-removal
-```
+Supported platforms: macOS (Apple Silicon / Intel), Linux (x86_64 / ARM64),
+Windows (x86_64, via Git Bash / MSYS2).
 
 ### Basic Usage
 
@@ -134,19 +146,18 @@ Images without detected watermarks are automatically skipped to protect original
 
 ## Troubleshooting
 
-### Download failed during install
+### Download failed or checksum missing during install
 
-Check your network connection. If GitHub is unreachable, install via Cargo instead:
+If the SHA256 checksum file is absent for a release, the installer will abort to
+protect you from an unverified binary. Build from source instead:
 ```bash
 cargo install gemini-watermark-removal
 ```
 
 ### Unsupported platform
 
-The installer supports macOS, Linux, and Windows (MSYS). For other platforms:
-```bash
-cargo install gemini-watermark-removal
-```
+`cargo install` works on any platform with a Rust toolchain. The pre-built binary
+installer covers macOS, Linux, and Windows (Git Bash / MSYS2) only.
 
 ### "No watermark detected" on a watermarked image
 - Try lowering the threshold: `-t 0.1`
