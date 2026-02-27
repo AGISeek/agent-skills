@@ -18,8 +18,8 @@
 **特性：**
 - 数学精确的逆向 alpha 混合算法
 - 三阶段水印检测（自动跳过无水印图像）
-- 预编译二进制支持 macOS、Linux、Windows（SHA256 强制校验，需显式确认）
-- 支持通过 `cargo install` 从源码构建（安全敏感环境推荐）
+- **纯 Python 实现** — 无二进制下载，无网络访问，完全离线运行
+- 仅需安装：`pip install Pillow numpy`
 - 支持 JPEG、PNG、WebP、BMP 格式
 
 ### libvips-image

@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.1.0] - 2026-02-27
+
+### Changed (gemini-watermark)
+
+- **Replaced binary installer with pure Python script** (`scripts/remove_watermark.py`)
+  — eliminates all external binary downloads and network access at install/run time
+- **Removed `scripts/install.sh`** — no longer needed; the only runtime dependency
+  is `pip install Pillow numpy`
+- Algorithm fully reimplemented in Python (numpy + Pillow):
+  - Reverse alpha blending (`original = (watermarked − α·255) / (1−α)`)
+  - Three-stage detection: Spatial NCC, Sobel-gradient NCC, Variance dampening
+  - Built-in 4-pointed sparkle alpha map (synthetic; custom map supported via `--alpha-map`)
+- `--alpha-map` flag added: supply a custom grayscale alpha map derived from a
+  background capture for pixel-perfect accuracy
+- Supported formats unchanged: JPEG, PNG, WebP, BMP
+
+### Security (gemini-watermark)
+
+- **EXTERNAL_DOWNLOADS eliminated** — no files downloaded at any point
+- **REMOTE_CODE_EXECUTION eliminated** — no third-party binary is fetched or executed
+- **COMMAND_EXECUTION eliminated** — no `chmod +x` on downloaded artifacts
+- **Suspicious URL removed** — `easynote-cc` GitHub dependency fully dropped
+- Skill is now self-contained and fully auditable
+
 ## [2.0.1] - 2026-02-18
 
 ### Security (gemini-watermark)

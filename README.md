@@ -20,8 +20,8 @@ Remove visible Gemini AI watermarks from images via reverse alpha blending. Fast
 **Features:**
 - Mathematically accurate reverse alpha blending
 - Three-stage watermark detection (skip non-watermarked images)
-- Pre-built binaries for macOS, Linux, Windows (SHA256-verified, requires explicit consent)
-- Build from source via `cargo install` (recommended for security-sensitive environments)
+- **Pure Python** — no binary downloads, no network access, fully offline
+- Only dependencies: `pip install Pillow numpy`
 - Supports JPEG, PNG, WebP, BMP formats
 
 ### libvips-image

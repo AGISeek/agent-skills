@@ -1,2 +1,3 @@
-# Downloaded binary
-scripts/gemini-watermark
+# Python cache
+__pycache__/
+*.pyc
